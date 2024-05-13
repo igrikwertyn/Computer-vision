@@ -11,6 +11,9 @@ closed_eyes = 0
 prev_eyes = False
 prev_yawn = False
 sleeping_start_time = None
+recent_closed_eyes = 0
+recent_yawned = 0
+
 
 mp_drawing = mp.solutions.drawing_utils
 mp_face_mesh = mp.solutions.face_mesh
@@ -142,9 +145,9 @@ with mp_face_mesh.FaceMesh(
                                     cv2.LINE_AA)
                         if elapsed_time >= 3:
                             if not prev_eyes:
-                                closed_eyes += 1  # Увеличиваем счетчик closed_eyes на 1
+                                recent_closed_eyes += 1  # Увеличиваем счетчик closed_eyes на 1
                             prev_eyes = True
-                            print(closed_eyes)
+                            print(recent_closed_eyes)
                             cv2.putText(image, "YOU'RE SLEEPING!", (150, 150), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2,
                                         cv2.LINE_AA)
                         else:
@@ -153,7 +156,7 @@ with mp_face_mesh.FaceMesh(
 
                 if average_yawn >= 0.05:
                     if not prev_yawn:
-                        yawned += 1
+                        recent_yawned += 1
                     prev_yawn = True
                     cv2.putText(image, "YOU YAWNED!", (150, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2,
                                 cv2.LINE_AA)
@@ -173,12 +176,20 @@ with mp_face_mesh.FaceMesh(
             print("Частота морганий в минуту:", bpm)
             start_time = time.time()
             blinks = 0
+            # Обновляем значения переменных closed_eyes и yawned
+            closed_eyes = recent_closed_eyes
+            yawned = recent_yawned
+
+            # Сбрасываем значения recent_closed_eyes и recent_yawned
+            recent_closed_eyes = 0
+            recent_yawned = 0
 
         # Отображаем количество зеваний на экране
-        cv2.putText(image, f'Yawned: {yawned}', (10, 480), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2,
+        cv2.putText(image, f'Yawned: {recent_yawned}', (10, 480), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2,
                     cv2.LINE_AA)
 
-        if closed_eyes >= 3 and yawned >= 2:
+        # Логика обновления recent_closed_eyes и recent_yawned
+        if recent_closed_eyes >= 3 and recent_yawned >= 2:
             if sleeping_start_time is None:
                 sleeping_start_time = time.time()
             else:
@@ -187,8 +198,8 @@ with mp_face_mesh.FaceMesh(
                     cv2.putText(image, "YOU'RE SLEEPING!", (150, 150), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2,
                                 cv2.LINE_AA)
                 else:
-                    yawned = 0
-                    closed_eyes = 0
+                    recent_yawned = 0
+                    recent_closed_eyes = 0
                     sleeping_start_time = None
 
         # Отображение изображения с отмеченными точками
